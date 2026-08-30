@@ -16,6 +16,27 @@ https://github.com/user-attachments/assets/a8bcadc4-e040-4cf2-8fda-dd768b999c18
 > [!NOTE]
 > **DeerFlow 2.0 is a ground-up rewrite.** It shares no code with v1. If you're looking for the original Deep Research framework, it's maintained on the [`1.x` branch](https://github.com/bytedance/deer-flow/tree/main-1.x) — contributions there are still welcome. Active development has moved to 2.0.
 
+## ScholarFlow fork additions
+
+This fork is evolving DeerFlow into an evidence-first research system rather than a
+rebranded general-purpose agent. Its first independently testable component is
+[ScholarFlow Academic Search MCP](./backend/packages/scholarflow-mcp/README.md):
+
+- concurrent arXiv, Crossref, and OpenAlex search;
+- deterministic DOI/arXiv/title-author-year entity resolution;
+- reciprocal-rank fusion with a global result limit;
+- per-field provenance and explicit metadata conflicts;
+- partial results with provider-level failure diagnostics;
+- an offline deduplication benchmark reporting pairwise precision, recall, and F1;
+- a UTF-8 JSON CLI, dedicated CI, and a live known-item HitRate/MRR benchmark with an
+  explicit non-recall metric boundary;
+- deterministic page-level quote location over caller-supplied text, exposed through
+  MCP and CLI with original character offsets.
+
+The component has a deliberately narrow claim: it improves scholarly metadata retrieval,
+entity resolution, and quote traceability. It does not parse PDFs or infer that located
+text semantically supports a generated claim; those remain later vertical slices.
+
 ## Official Website
 
 Learn more and see **real demos** on our [**official website**](https://deerflow.tech).
@@ -49,6 +70,7 @@ DeerFlow has newly integrated the intelligent search and crawling toolset indepe
 
 - [🦌 DeerFlow - 2.0](#-deerflow---20)
   - [Official Website](#official-website)
+  - [ScholarFlow fork additions](#scholarflow-fork-additions)
   - [Coding Plan from ByteDance Volcengine](#coding-plan-from-bytedance-volcengine)
   - [InfoQuest](#infoquest)
   - [Table of Contents](#table-of-contents)

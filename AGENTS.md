@@ -62,6 +62,7 @@ deer-flow/
 │   ├── extensions/sources/         # Deployable snapshots of locally installed Python extensions
 │   ├── packages/extension-api/     # deerflow-extension-api package (import: deerflow_extension_api.*) — public extension contract
 │   ├── packages/harness/           # deerflow-harness package (import: deerflow.*) — agent framework
+│   ├── packages/scholarflow-mcp/   # standalone academic search, dedup, and page-quote evidence MCP
 │   └── app/                        # FastAPI Gateway + IM channels (import: app.*)
 ├── frontend/                       # Next.js frontend (pnpm) — see frontend/AGENTS.md
 ├── docker/                         # docker-compose files, nginx config, provisioner
@@ -223,3 +224,15 @@ These apply repo-wide; module guides own the module-specific detail.
   `scripts/verify_versions.sh <ver>` to catch drift early. See [RELEASING.md](RELEASING.md).
 - **Don't edit `CLAUDE.md`** — it only contains `@AGENTS.md`. All agent guidance changes
   belong here in `AGENTS.md`; `CLAUDE.md` is a thin import shim.
+
+### ScholarFlow academic search package
+
+`backend/packages/scholarflow-mcp/` is a standalone MCP server; it
+must not import the DeerFlow harness or Gateway app. Its provider adapters may use live
+APIs, but its unit tests and deduplication benchmark remain network-free and synthetic.
+Provider failures are returned as structured partial-result diagnostics. Entity-resolution
+changes require tests plus the committed pairwise precision/recall/F1 benchmark; do not
+replace the deterministic identity contract with an LLM judgment.
+The dedicated `.github/workflows/scholarflow-mcp.yml` workflow must stay offline. The
+known-item benchmark calls public APIs manually and must not be described as full recall
+without a human-labeled relevance pool.

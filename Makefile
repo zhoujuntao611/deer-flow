@@ -1,9 +1,10 @@
 # DeerFlow - Unified Development Environment
 
-.PHONY: help config config-upgrade check check-agent-guidance install extension-install extension-list extension-enable extension-disable extension-remove setup doctor support-bundle detect-thread-boundaries detect-blocking-io dev dev-daemon start start-daemon nginx stop up down clean docker-init docker-start docker-stop docker-logs docker-logs-frontend docker-logs-gateway docker-logs-redis setup-sandbox
+.PHONY: help config config-upgrade check check-agent-guidance install extension-install extension-list extension-enable extension-disable extension-remove scholarflow-check scholarflow-demo scholarflow-evidence-demo scholarflow-live-benchmark setup doctor support-bundle detect-thread-boundaries detect-blocking-io dev dev-daemon start start-daemon nginx stop up down clean docker-init docker-start docker-stop docker-logs docker-logs-frontend docker-logs-gateway docker-logs-redis setup-sandbox
 
 BASH ?= bash
 BACKEND_UV_RUN = cd backend && uv run
+SCHOLARFLOW_UV_RUN = uv run --project backend/packages/scholarflow-mcp
 
 # Detect OS for Windows compatibility
 ifeq ($(OS),Windows_NT)
@@ -38,6 +39,10 @@ help:
 	@echo "  make extension-enable NAME=...   - Enable an installed extension"
 	@echo "  make extension-disable NAME=...  - Disable an extension without uninstalling it"
 	@echo "  make extension-remove NAME=...   - Uninstall a managed extension"
+	@echo "  make scholarflow-check           - Test, lint, benchmark, and build ScholarFlow MCP"
+	@echo "  make scholarflow-demo QUERY=...  - Run a live multi-source ScholarFlow search"
+	@echo "  make scholarflow-evidence-demo   - Locate a quote in supplied page text"
+	@echo "  make scholarflow-live-benchmark  - Run the non-CI known-item retrieval benchmark"
 	@echo "  make setup-sandbox   - Pre-pull sandbox container image (recommended)"
 	@echo "  make dev             - Start all services in development mode (with hot-reloading)"
 	@echo "  make dev-daemon      - Start dev services in background (daemon mode)"
@@ -130,6 +135,22 @@ extension-remove: export DEER_FLOW_EXTENSION_NAME := $(value NAME)
 extension-remove:
 	$(if $(and $(filter command line,$(origin NAME)),$(strip $(value NAME))),,$(error usage: make extension-remove NAME=<extension>))
 	@cd backend && uv run --frozen --no-group extensions deerflow extensions remove --name-env __deerflow_extension_name__
+
+scholarflow-check:
+	@$(SCHOLARFLOW_UV_RUN) --extra dev ruff check backend/packages/scholarflow-mcp
+	@$(SCHOLARFLOW_UV_RUN) --extra dev ruff format --check backend/packages/scholarflow-mcp
+	@$(SCHOLARFLOW_UV_RUN) --extra dev pytest backend/packages/scholarflow-mcp/tests -q
+	@$(SCHOLARFLOW_UV_RUN) scholarflow-dedup-benchmark --min-precision 1 --min-recall 1 --min-f1 1
+	@uv build --project backend/packages/scholarflow-mcp
+
+scholarflow-demo:
+	@$(SCHOLARFLOW_UV_RUN) scholarflow-search "$(if $(QUERY),$(QUERY),GNSS spoofing UAV navigation)" --max-results 5
+
+scholarflow-evidence-demo:
+	@$(SCHOLARFLOW_UV_RUN) scholarflow-verify-evidence backend/packages/scholarflow-mcp/examples/evidence_input.json
+
+scholarflow-live-benchmark:
+	@$(SCHOLARFLOW_UV_RUN) scholarflow-known-item-benchmark --max-results 10
 
 # Pre-pull sandbox Docker image (optional but recommended)
 setup-sandbox:

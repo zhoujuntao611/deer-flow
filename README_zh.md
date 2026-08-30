@@ -16,6 +16,25 @@ https://github.com/user-attachments/assets/a8bcadc4-e040-4cf2-8fda-dd768b999c18
 > [!NOTE]
 > **DeerFlow 2.0 是一次彻底重写。** 它和 v1 没有共用代码。如果你要找的是最初的 Deep Research 框架，可以前往 [`1.x` 分支](https://github.com/bytedance/deer-flow/tree/main-1.x)。那里仍然欢迎贡献；当前的主要开发已经转向 2.0。
 
+## ScholarFlow Fork 改进
+
+这个 Fork 的目标是把 DeerFlow 演进为 evidence-first 科研系统，而不是给通用 Agent
+换名称和界面。第一项可独立测试的组件是
+[ScholarFlow Academic Search MCP](./backend/packages/scholarflow-mcp/README.md)：
+
+- 并发检索 arXiv、Crossref 和 OpenAlex；
+- 使用 DOI、arXiv ID、标题、作者和年份做确定性实体归一化；
+- 使用倒数排名融合对多源结果统一排序，并执行全局数量限制；
+- 保留字段来源与元数据冲突，不静默覆盖；
+- 单个数据源失败时返回其他来源的结果和结构化诊断；
+- 提供离线去重基准，输出 pairwise precision、recall 和 F1；
+- 提供 UTF-8 JSON CLI、独立 CI，以及明确不等同于 Recall 的真实 known-item
+  HitRate/MRR 评测；
+- 对调用方提供的页文本做确定性引文定位，通过 MCP 和 CLI 返回原文字符偏移。
+
+该组件只声明解决学术元数据检索、实体归一化和引文可追溯性。它不会解析 PDF，
+也不会把“引文在该页出现”推断为“论文在语义上支持该论点”；这些仍是后续垂直切片。
+
 ## 官网
 
 想了解更多，或者直接看**真实演示**，可以访问[**官网**](https://deerflow.tech)。
@@ -46,6 +65,7 @@ DeerFlow 新近集成了 BytePlus 自研的智能搜索与抓取工具集——[
 
 - [🦌 DeerFlow - 2.0](#-deerflow---20)
   - [官网](#官网)
+  - [ScholarFlow Fork 改进](#scholarflow-fork-改进)
   - [字节跳动火山引擎方舟 Coding Plan](#字节跳动火山引擎方舟-coding-plan)
   - [InfoQuest](#infoquest)
   - [目录](#目录)
