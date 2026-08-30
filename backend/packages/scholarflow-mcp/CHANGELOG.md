@@ -5,6 +5,8 @@ versioning independently from the DeerFlow application.
 
 ## Unreleased
 
+## 0.1.0 - 2026-08-30
+
 ### Added
 
 - Concurrent arXiv, Crossref, and OpenAlex provider adapters.
