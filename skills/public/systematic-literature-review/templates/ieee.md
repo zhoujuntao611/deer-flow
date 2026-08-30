@@ -38,7 +38,8 @@ Formatting rules:
 ### Special cases
 
 - **More than 6 authors**: IEEE allows listing the first author followed by `et al.`: `A. Vaswani et al., "Attention is all you need," arXiv:1706.03762, 2017.` Use this for papers with many authors to keep reference entries readable.
-- **If the paper has also been published at a venue**: prefer the venue citation format over arXiv. In this workflow we only have arXiv metadata, so always use the arXiv form.
+- **If the paper has also been published at a venue**: prefer the venue citation format over arXiv when the venue and DOI are present in the normalized metadata.
+- **Published journal record**: `[N] A. A. Author and B. B. Author, "Title," Journal or Proceedings Title, Year, doi: DOI.` Prefer this form when normalized venue and DOI metadata are present. Do not also cite the merged arXiv version.
 
 ## Report Structure
 
@@ -49,7 +50,7 @@ Follow this structure verbatim. Note that IEEE reports use **numeric citations t
 
 **Date**: <YYYY-MM-DD>
 **Papers surveyed**: <N>
-**Scope**: <arXiv search query, category, time window>
+**Scope**: <retrieval sources, query, and time window>
 **Citation format**: IEEE
 
 ## Executive Summary
@@ -58,9 +59,9 @@ Follow this structure verbatim. Note that IEEE reports use **numeric citations t
 
 ## Methodology
 
-This review surveyed <N> arXiv papers retrieved on <YYYY-MM-DD> using the query `<query>`<, filtered to category <cat>><, published between <start_date> and <end_date>>. Papers were sorted by <relevance | submission date> and the top <N> were included. Metadata extraction was performed by language-model agents, with cross-paper synthesis performed by the lead agent.
+This review surveyed <N> papers retrieved on <YYYY-MM-DD> using the query `<query>` from <successful providers>. Retrieval returned <raw_count> source records, merged to <unique_before_limit> unique works before the requested limit; <duplicates_removed> duplicate records were consolidated. <Describe failed providers or arXiv-only fallback, if applicable.> Metadata extraction was performed from available abstracts by language-model agents, with cross-paper synthesis performed by the lead agent.
 
-**Limitations of this review**: arXiv preprints are not peer-reviewed; coverage is limited to arXiv.
+**Limitations of this review**: <state provider coverage, failures, metadata-only exclusions, abstract availability, and the preprint status of arXiv-only records. If page-level quote verification was used, report located/unlocated counts and state that it did not assess semantic support; otherwise state that page-level evidence was not checked. Do not claim database exhaustiveness.>
 
 ## Themes
 
@@ -124,4 +125,6 @@ Before saving the report, verify:
 - [ ] Author names use `FirstInitial. LastName` format (initials before last name).
 - [ ] Titles are in double quotes and sentence case.
 - [ ] arXiv identifiers use the `arXiv:<bare_id>` form, not the full URL.
+- [ ] Published records include venue and DOI; merged preprint and published versions are not cited twice.
+- [ ] The methodology reports provider status and deduplication counts when ScholarFlow was used.
 - [ ] Per-paper annotations are ordered by reference number, matching the References section order.

@@ -8,7 +8,7 @@ Use this template when the user mentions BibTeX, LaTeX, wants machine-readable r
 
 - `@article` requires a `journal` field. arXiv is not a journal — it is a preprint server. Using `@article` with `journal = {arXiv}` is technically wrong and some bibliography styles will complain or render it inconsistently.
 - `@misc` is the correct entry type for preprints, technical reports, and other non-journal publications. It accepts `howpublished` and `eprint` fields, which is exactly what arXiv citations need.
-- Only switch to `@article` (or `@inproceedings`) when the paper has been **formally published** in a peer-reviewed venue and you have the venue metadata. In this workflow we only have arXiv metadata, so always emit `@misc`.
+- Switch to `@article` (or `@inproceedings` when the venue type is known) when the normalized record has formal venue metadata and a DOI. If a record combines arXiv and published sources, emit one published entry rather than two versions.
 
 ## Citation Format Rules
 
@@ -52,6 +52,21 @@ Use this template when the user mentions BibTeX, LaTeX, wants machine-readable r
 - **`primaryClass`**: the first category from the paper's `categories` list (e.g. `cs.CL`, `cs.CV`, `stat.ML`). This is the paper's primary subject area.
 - **`url`**: the full `abs_url` from paper metadata.
 
+### Entry structure for published records
+
+```bibtex
+@article{citekey,
+  author  = {LastName1, FirstName1 and LastName2, FirstName2},
+  title   = {Title of the Paper},
+  journal = {Venue Name},
+  year    = {YYYY},
+  doi     = {CANONICAL_DOI},
+  url     = {https://doi.org/CANONICAL_DOI}
+}
+```
+
+Use `@inproceedings` only when the source metadata establishes that the venue is conference proceedings; use `booktitle` instead of `journal`. If publication type is ambiguous, `@article` with the known venue and DOI is preferable to fabricating conference metadata.
+
 ## Report Structure
 
 The BibTeX report is slightly different from APA / IEEE: the **bibliography is a separate `.bib` file**, and the main report uses LaTeX-style `\cite{key}` references that would resolve against that file. Since we are emitting markdown, we show `\cite{key}` verbatim in the prose and emit the BibTeX entries inside a fenced code block at the end.
@@ -61,7 +76,7 @@ The BibTeX report is slightly different from APA / IEEE: the **bibliography is a
 
 **Date**: <YYYY-MM-DD>
 **Papers surveyed**: <N>
-**Scope**: <arXiv search query, category, time window>
+**Scope**: <retrieval sources, query, and time window>
 **Citation format**: BibTeX
 
 ## Executive Summary
@@ -70,9 +85,9 @@ The BibTeX report is slightly different from APA / IEEE: the **bibliography is a
 
 ## Methodology
 
-This review surveyed <N> arXiv papers retrieved on <YYYY-MM-DD> using the query `<query>`<, filtered to category <cat>><, published between <start_date> and <end_date>>. Metadata extraction was performed by language-model agents, with cross-paper synthesis performed by the lead agent. All citations in this report use BibTeX cite keys; the corresponding `.bib` entries are at the end of this document.
+This review surveyed <N> papers retrieved on <YYYY-MM-DD> using the query `<query>` from <successful providers>. Retrieval returned <raw_count> source records, merged to <unique_before_limit> unique works before the requested limit; <duplicates_removed> duplicate records were consolidated. <Describe failed providers or arXiv-only fallback, if applicable.> Metadata extraction used available abstracts only. All citations use BibTeX cite keys; the corresponding entries are at the end of this document.
 
-**Limitations of this review**: arXiv preprints are not peer-reviewed; coverage is limited to arXiv.
+**Limitations of this review**: <state provider coverage, failures, metadata-only exclusions, abstract availability, and the preprint status of arXiv-only records. If page-level quote verification was used, report located/unlocated counts and state that it did not assess semantic support; otherwise state that page-level evidence was not checked. Do not claim database exhaustiveness.>
 
 ## Themes
 
@@ -145,12 +160,13 @@ Save the entries below to a `.bib` file and reference them from your LaTeX docum
 
 Before saving the report, verify:
 
-- [ ] Every entry is `@misc`, not `@article` (this workflow only has arXiv metadata).
+- [ ] arXiv-only preprints use `@misc`; formally published records with venue and DOI use the appropriate published type.
 - [ ] Cite keys are unique within the report.
 - [ ] Cite keys follow the `<firstauthorlast><year><firstword>` pattern, all lowercase.
 - [ ] `author` field uses ` and ` (the literal word) between authors, not commas.
 - [ ] LaTeX special characters in author names are escaped or brace-wrapped.
 - [ ] `eprint` is the bare arXiv id (no `arXiv:` prefix, no version suffix).
-- [ ] `primaryClass` is set from the paper's first category.
-- [ ] Every `\cite{key}` in the text has a matching `@misc` entry in the bibliography.
+- [ ] `primaryClass` is set for arXiv entries only when category metadata is available; it is omitted rather than invented otherwise.
+- [ ] Every `\cite{key}` in the text has exactly one matching bibliography entry.
+- [ ] Merged preprint/published records are emitted once, using the published DOI form.
 - [ ] The bibliography is emitted inside a fenced ```` ```bibtex ```` code block so users can copy-paste directly into a `.bib` file.

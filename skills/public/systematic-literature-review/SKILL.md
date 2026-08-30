@@ -1,13 +1,13 @@
 ---
 name: systematic-literature-review
-description: Use this skill when the user wants a systematic literature review, survey, or synthesis across multiple academic papers on a topic. Also covers annotated bibliographies and cross-paper comparisons. Searches arXiv and outputs reports in APA, IEEE, or BibTeX format. Not for single-paper tasks — use academic-paper-review for reviewing one paper.
+description: Use this skill when the user wants a systematic literature review, survey, or synthesis across multiple academic papers on a topic. Also covers annotated bibliographies and cross-paper comparisons. Uses configured multi-source scholarly search when available, with an arXiv fallback, and outputs reports in APA, IEEE, or BibTeX format. Not for single-paper tasks — use academic-paper-review for reviewing one paper.
 ---
 
 # Systematic Literature Review Skill
 
 ## Overview
 
-This skill produces a structured **systematic literature review (SLR)** across multiple academic papers on a research topic. Given a topic query, it searches arXiv, extracts structured metadata (research question, methodology, key findings, limitations) from each paper in parallel, synthesizes themes across the full set, and emits a final report with consistent citations.
+This skill produces a structured **systematic literature review (SLR)** across multiple academic papers on a research topic. Given a topic query, it retrieves normalized scholarly metadata, extracts research questions, methodologies, findings, and limitations from available abstracts in parallel, synthesizes themes across the full set, and emits a final report with consistent citations and an explicit coverage statement.
 
 **Distinct from `academic-paper-review`:** that skill does deep peer review of a single paper. This skill does breadth-first synthesis across many papers. If the user hands you one paper URL and asks "review this paper", route to `academic-paper-review` instead.
 
@@ -36,15 +36,38 @@ The workflow has five phases. Follow them in order.
 Before doing any retrieval, confirm the following with the user. If any of these are unclear, ask **one** clarifying question that covers the missing pieces. Do not ask one question at a time.
 
 - **Topic**: the research area in plain English (e.g. "transformer attention variants").
-- **Scope**: how many papers (default 20, hard upper bound 50), optional time window (e.g. "last 2 years"), optional arXiv category (e.g. `cs.CL`, `cs.CV`).
+- **Scope**: how many papers (default 20, hard upper bound 50), optional time window (e.g. "last 2 years"), and optional arXiv category for fallback retrieval (e.g. `cs.CL`, `cs.CV`).
 - **Citation format**: APA, IEEE, or BibTeX (default APA if the user does not specify and does not seem to be writing for a specific venue).
 - **Output location**: where to save the final report (default `/mnt/user-data/outputs/`).
 
 If the user says "50+ papers", politely cap it at 50 and explain that synthesis quality degrades quickly past that — for larger surveys they should split by sub-topic.
 
-### Phase 2: Search arXiv
+### Phase 2: Retrieve and normalize papers
 
-Call the bundled search script. Do **not** try to scrape arXiv by other means and do **not** write your own HTTP client — this script handles URL encoding, Atom XML parsing, and id normalization correctly.
+Use exactly one of the following paths. Never mix results from both paths in one review.
+
+#### Preferred path: ScholarFlow multi-source search
+
+If the `scholarflow-academic_search_literature` tool is available, call it exactly once with:
+
+- `query`: a concise bibliographic query containing the core topic, usually 2-6 words;
+- `max_results`: the requested paper count;
+- `from_year` / `to_year`: only when the user supplied a time window;
+- `providers`: omit unless the user explicitly restricts coverage.
+
+The tool searches arXiv, Crossref, and OpenAlex concurrently, merges duplicate records, applies reciprocal-rank fusion across providers, and preserves identifiers, source provenance, and metadata conflicts. Keep these response fields for the methodology section: `provider_status`, `total_raw_records`, `unique_before_limit`, `unique_records`, and `duplicates_removed`.
+
+Before Phase 3:
+
+- Treat coverage as **multi-source** only when at least two providers report `status: "ok"`. If one provider succeeds, proceed only as a degraded single-source review and disclose that limitation.
+- If every provider fails, report the provider diagnostics and stop. Do not silently switch retrieval methods or invent metadata.
+- Never infer an abstract. Send records with non-empty abstracts to Phase 3. Records without abstracts may remain in the bibliography only if clearly labeled **metadata-only**; otherwise exclude them and state the resulting count.
+- Preserve `doi`, `arxiv_id`, `openalex_id`, `sources`, and `conflicts`. Use the canonical DOI when a preprint and published version were merged.
+- If fewer usable papers remain than requested, report the actual count. Do not pad the set.
+
+#### Fallback path: bundled arXiv search
+
+If the ScholarFlow tool is not available, call the bundled script below. Do **not** scrape arXiv by other means or write another HTTP client; this script handles URL encoding, Atom XML parsing, and identifier normalization.
 
 ```bash
 python /mnt/skills/public/systematic-literature-review/scripts/arxiv_search.py \
@@ -56,7 +79,7 @@ python /mnt/skills/public/systematic-literature-review/scripts/arxiv_search.py \
   [--end-date YYYY-MM-DD]
 ```
 
-**IMPORTANT — extract 2-3 core keywords before searching.** Do not pass the user's full topic description as the query. Before calling the script, mentally reduce the topic to its 2-3 most essential terms. Drop qualifiers like "in computer vision", "for NLP", "variants", "recent" — those belong in `--category` or `--start-date`, not in the query string.
+For this fallback only, extract 2-3 core keywords before searching. Do not pass the user's full topic description as the query. Reduce the topic to its most essential terms. Drop qualifiers like "in computer vision", "for NLP", "variants", and "recent"; those belong in `--category` or `--start-date`, not in the query string.
 
 **Query phrasing — keep it short.** The script wraps multi-word queries in double quotes for phrase matching on arXiv. This means:
 
@@ -80,11 +103,11 @@ The script prints a JSON array to stdout. Each paper has: `id`, `title`, `author
 - `submittedDate` sorting is only appropriate when the user explicitly asks for chronological order (e.g. "show me papers in the order they were published"). This is rare.
 - `lastUpdatedDate` is rarely useful; ignore it unless the user asks.
 
-**Run the search exactly once.** Do not retry with modified queries if the results seem imperfect — arXiv's relevance ranking is what it is. Retrying with different query phrasings wastes tool calls and risks hitting the recursion limit. If the results are genuinely empty (0 papers), tell the user and suggest they broaden their topic or remove the category filter.
+**Run the fallback search exactly once.** Do not retry with modified queries if the results seem imperfect. If the results are genuinely empty, tell the user and suggest they broaden their topic or remove the category filter.
 
 **If the script returns fewer papers than requested**, that is the real size of the arXiv result set for the query. Do not pad the list — report the actual count to the user and proceed.
 
-**If the script fails** (network error, non-200 from arXiv), tell the user which error and stop. Do not try to fabricate paper metadata.
+**If the script fails** (network error, non-200 from arXiv), tell the user which error occurred and stop. Do not fabricate paper metadata or silently switch to a different retrieval path.
 
 **Do not save the search results to a file** — the JSON stays in your context for Phase 3. The only file saved during the entire workflow is the final report in Phase 5.
 
@@ -121,28 +144,35 @@ Split papers into batches of ~5, then for each batch, call the `task` tool with 
 
 If the paper count lands between rows (e.g. 23 papers), round up to the next row's layout but only dispatch as many batches as you actually need — the decision table gives you the shape, not a rigid prescription.
 
-**Do the batching at the main-agent level**: you already have every paper's abstract from Phase 2, so each subagent receives pure text input. Subagents should not need to access the network or the sandbox — their only job is to read text and return JSON. Do not ask subagents to re-run `arxiv_search.py`; that would waste tokens and risk rate-limiting.
+**Do the batching at the main-agent level**: you already have the usable abstracts from Phase 2, so each subagent receives pure text input. Subagents should not access the network or sandbox. Do not ask them to repeat retrieval.
 
 **What each subagent receives**, as a structured prompt:
 
 ```
 Execute this task: extract structured metadata and key findings from the
-following arXiv papers.
+following scholarly records. Base analytical fields only on the supplied
+abstract; never infer missing content.
 
 Papers:
 [Paper 1]
+paper_id: 10.48550/arXiv.1706.03762
+doi: 10.48550/arXiv.1706.03762
 arxiv_id: 1706.03762
+openalex_id: W2963403868
+sources: arxiv, crossref, openalex
 title: Attention Is All You Need
 authors: Ashish Vaswani, Noam Shazeer, ...
 published: 2017-06-12
 abstract: <full abstract text>
 
 [Paper 2]
-arxiv_id: ...
+paper_id: ...
 ...
 
 For each paper, return a JSON object with these fields:
-- arxiv_id (string)
+- paper_id (string, copied exactly from the input)
+- doi, arxiv_id, openalex_id (string or null, copied exactly from the input)
+- sources (list of strings, copied exactly from the input)
 - title (string)
 - authors (list of strings)
 - published_date (string, YYYY-MM-DD)
@@ -173,11 +203,20 @@ Now produce the final SLR report. Two things happen here: cross-paper synthesis 
 
 If the paper set is too small or too heterogeneous to support thematic synthesis (e.g. 5 papers on wildly different sub-topics), say so explicitly in the report — do not force themes that are not there.
 
+**Optional page-level quote verification**: use
+`scholarflow-academic_verify_evidence_spans` only when page-numbered full text is already
+available from an authorized retrieval step. Pass the page text plus the claims' exact
+quotes once, and report `located`, `quote_not_found`, or `page_missing` outcomes in the
+methodology. A located result verifies textual presence and coordinates only:
+`semantic_support` remains `not_assessed`, so never describe the claim as supported,
+entailed, or validated on that basis. If the workflow has abstracts but no page-numbered
+full text, skip this tool and disclose that page-level evidence was not checked.
+
 **Citation formatting**: the exact format depends on user preference. Read **only** the template file that matches the user's requested format, not all three:
 
 - [templates/apa.md](templates/apa.md) — APA 7th edition. Default for social sciences and most CS journals. Use when the user requests APA or does not specify a format.
 - [templates/ieee.md](templates/ieee.md) — IEEE numeric citations. Use when the user targets an IEEE conference or journal, or explicitly asks for IEEE.
-- [templates/bibtex.md](templates/bibtex.md) — BibTeX entries. Use when the user mentions BibTeX, LaTeX, or wants machine-readable references. **Important**: arXiv papers are cited as `@misc`, not `@article` — the BibTeX template covers this explicitly.
+- [templates/bibtex.md](templates/bibtex.md) — BibTeX entries. Use when the user mentions BibTeX, LaTeX, or wants machine-readable references. Published records with venue metadata use the appropriate published type; unresolved arXiv preprints use `@misc`.
 
 Each template contains both the citation rules and a full report structure (executive summary, themes, per-paper annotations, references, methodology section). Follow the template's structure verbatim for the report body, then fill in content from your Phase 3 metadata.
 
@@ -201,7 +240,7 @@ User: "Do a systematic literature review of recent transformer attention variant
 
 Your flow:
 1. Phase 1: confirm topic (transformer attention variants), scope (20 papers, default time window), format (APA). Ask **one** clarification only if something is missing (e.g. "Any particular time window, or should I default to the last 3 years?").
-2. Phase 2: `arxiv_search.py "transformer attention" --max-results 20 --sort-by relevance --start-date 2023-01-01`.
+2. Phase 2: if available, call `scholarflow-academic_search_literature` once with `query="transformer attention"`, `max_results=20`, and the requested year range. Otherwise call `arxiv_search.py "transformer attention" --max-results 20 --sort-by relevance --start-date 2023-01-01` once.
 3. Phase 3: 20 papers → round 1 = 3 subagents × 5 papers = 15 covered, round 2 = 1 subagent × 5 papers = 5 covered. Aggregate.
 4. Phase 4: read `templates/apa.md`, write the report using its structure, fill in themes + per-paper annotations from Phase 3 metadata.
 5. Phase 5: save to `slr-transformer-attention-20260409.md`, call `present_files`.
@@ -213,9 +252,9 @@ User: "Survey a few papers on diffusion models for me."
 Your flow:
 1. Phase 1: "a few" is ambiguous. Ask one question: "How many papers would you like — 10, 20, or 30? And any citation format preference (APA is the default)?"
 2. User responds "10, BibTeX".
-3. Phase 2: `arxiv_search.py "diffusion models" --max-results 10 --category cs.CV`.
+3. Phase 2: use the ScholarFlow tool once when available; otherwise call `arxiv_search.py "diffusion models" --max-results 10 --category cs.CV` once.
 4. Phase 3: 10 papers → single round, 2 subagents × 5 papers.
-5. Phase 4: read `templates/bibtex.md`, format with `@misc` entries (not `@article`).
+5. Phase 4: read `templates/bibtex.md`; use published entry types when venue metadata is present and `@misc` for arXiv-only preprints.
 6. Phase 5: save and present.
 
 **Example 3: Out-of-scope request**
@@ -227,9 +266,9 @@ This is a single-paper peer review, not a literature survey. Do not use this ski
 ## Notes
 
 - **Prerequisite: `subagent_enabled` must be `true`**. Phase 3 requires the `task` tool for parallel metadata extraction. This tool is only loaded when `subagent_enabled` is set to `true` in the runtime config (`config.configurable.subagent_enabled`). Without it, the `task` tool will not appear in the available tools and Phase 3 cannot execute as designed.
-- **arXiv only, by design**. This skill does not query Semantic Scholar, PubMed, or Google Scholar. arXiv covers the bulk of CS/ML/physics/math preprints, which is what DeerFlow users most often want to survey. Multi-source academic search belongs in a dedicated MCP server, not inside this skill.
+- **Multi-source retrieval is optional, not simulated**. When the `scholarflow-academic_search_literature` MCP tool is configured, use its arXiv, Crossref, and OpenAlex aggregation. Without that tool, use the bundled arXiv fallback and describe the review as arXiv-only.
 - **Hard upper bound of 50 papers**. This is tied to the Phase 3 concurrency strategy (max 3 subagents per round, ~5 papers each, at most ~3 rounds). Surveys larger than 50 papers degrade in synthesis quality and are better done by splitting into sub-topics.
 - **Phase 3 requires subagents to be enabled**. This skill's parallel extraction step hard-requires the `task` tool, which is only available when `subagent_enabled=true` at runtime. If subagents are unavailable, do not claim to execute the Phase 3 parallel plan; instead, tell the user that subagents must be enabled for the full workflow, or offer to narrow/split the request into a smaller manual review.
 - **Subagent results are strings, not objects**. Always strip the `Task Succeeded. Result: ` / `Task failed.` / `Task timed out.` prefixes before parsing the JSON payload.
-- **The `id` field is a bare arXiv id** (e.g. `1706.03762`), not a URL and not with a version suffix. `abs_url` / `pdf_url` hold the full URLs if you need them.
+- **Identifiers remain source-specific**. ScholarFlow records may contain DOI, arXiv, and OpenAlex identifiers plus source provenance. In fallback results, the `id` field is a bare arXiv id (e.g. `1706.03762`); `abs_url` / `pdf_url` contain the full URLs.
 - **Synthesis, not listing**. The final report must identify themes and compare findings across papers. A report that only lists papers one after another is a failure mode — if you cannot find themes, say so explicitly instead of faking them.

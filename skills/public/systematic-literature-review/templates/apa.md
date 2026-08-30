@@ -33,11 +33,21 @@ Formatting rules:
 - **Source**: the literal word `arXiv`, then the full abs URL.
 - **No DOI** unless the paper has also been published in a venue with a DOI. arXiv alone uses the URL.
 
+### Reference list entry for published articles
+
+When a normalized record has a publication venue and DOI, prefer the published form over its arXiv form:
+
+```
+Author, A. A., & Author, B. B. (Year). Title of the paper. Journal or Proceedings Title. https://doi.org/DOI
+```
+
+Use the canonical lowercase DOI without a `doi:` prefix. Do not emit both a preprint entry and a published entry when ScholarFlow merged them into one record.
+
 ### Special cases
 
 - **Up to 20 authors**: list all of them separated by commas, with `&` before the last.
 - **21 or more authors**: list the first 19, then `...`, then the final author.
-- **No DOI and no URL**: not possible for arXiv papers; always use the `abs_url` from the paper metadata.
+- **No DOI and no URL**: identify the record as metadata-only and disclose the missing locator instead of inventing one.
 
 ## Report Structure
 
@@ -48,7 +58,7 @@ Follow this structure verbatim when writing the SLR report body. Fill in content
 
 **Date**: <YYYY-MM-DD>
 **Papers surveyed**: <N>
-**Scope**: <arXiv search query, category, time window>
+**Scope**: <retrieval sources, query, and time window>
 **Citation format**: APA 7th edition
 
 ## Executive Summary
@@ -57,9 +67,9 @@ Follow this structure verbatim when writing the SLR report body. Fill in content
 
 ## Methodology
 
-This review surveyed <N> arXiv papers retrieved on <YYYY-MM-DD> using the query `<query>`<, filtered to category <cat>><, published between <start_date> and <end_date>>. Papers were sorted by <relevance | submission date> and the top <N> were included. Metadata extraction (research question, methodology, key findings, limitations) was performed by language-model agents, with cross-paper synthesis performed by the lead agent.
+This review surveyed <N> papers retrieved on <YYYY-MM-DD> using the query `<query>` from <successful providers>. Retrieval returned <raw_count> source records, merged to <unique_before_limit> unique works before the requested limit; <duplicates_removed> duplicate records were consolidated. <Describe failed providers or arXiv-only fallback, if applicable.> Metadata extraction (research question, methodology, key findings, limitations) was performed from available abstracts by language-model agents, with cross-paper synthesis performed by the lead agent.
 
-**Limitations of this review**: arXiv preprints are not peer-reviewed; some included papers may not reflect their final published form. Coverage is limited to arXiv — papers published directly in venues without arXiv preprints are not represented.
+**Limitations of this review**: <state provider coverage, provider failures, metadata-only exclusions, abstract availability, and that arXiv preprints may not be peer-reviewed. If page-level quote verification was used, report located/unlocated counts and state that it did not assess semantic support; otherwise state that page-level evidence was not checked. Do not claim database exhaustiveness.>
 
 ## Themes
 
@@ -122,4 +132,6 @@ Before saving the report, verify:
 - [ ] Years are in parentheses inline, and at the start of reference entries.
 - [ ] Titles are in sentence case in references (only first word + proper nouns capitalized).
 - [ ] arXiv URLs use the `abs_url` form (`https://arxiv.org/abs/...`), not `pdf_url`.
+- [ ] Published records use their venue and canonical `https://doi.org/...` locator; merged versions are not cited twice.
+- [ ] The methodology names successful and failed providers and reports deduplication counts when ScholarFlow was used.
 - [ ] References are alphabetized by first author's last name.

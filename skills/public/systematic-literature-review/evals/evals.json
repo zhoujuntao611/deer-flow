@@ -7,10 +7,8 @@
       "expected_output": "A structured SLR report saved to /mnt/user-data/outputs/ with APA citations, thematic synthesis across 10 papers, and per-paper annotations.",
       "expectations": [
         "The skill read SKILL.md for systematic-literature-review",
-        "The arxiv_search.py script was called with a short keyword query (2-3 words), not the full topic description",
-        "The search used --category cs.CV",
-        "The search used --sort-by relevance, not submittedDate",
-        "The search was executed only once without retries",
+        "When scholarflow-academic_search_literature was available it was called exactly once with a concise query and year filters; otherwise arxiv_search.py was called exactly once with a 2-3 word query",
+        "The arXiv fallback, if used, included --category cs.CV and --sort-by relevance rather than submittedDate",
         "Metadata extraction was delegated via the task tool to subagents, not done inline or via python -c",
         "The APA template file (templates/apa.md) was read",
         "The final report was saved to /mnt/user-data/outputs/ with a filename matching slr-<topic-slug>-<YYYYMMDD>.md",
@@ -20,7 +18,8 @@
         "The report contains a Convergences and Disagreements section",
         "The report contains a Gaps and Open Questions section",
         "The report contains per-paper annotations for each of the 10 papers",
-        "The references section uses APA 7th format with arXiv URLs"
+        "The references section uses APA 7th format, prefers venue plus DOI for published records, and uses arXiv URLs only for preprints",
+        "When ScholarFlow was used, the methodology reports successful or failed providers and deduplication counts"
       ]
     },
     {
@@ -29,13 +28,13 @@
       "expected_output": "A structured SLR report with BibTeX citations using @misc entries for arXiv preprints.",
       "expectations": [
         "The skill read SKILL.md for systematic-literature-review",
-        "The arxiv_search.py script was called with a short keyword query",
+        "ScholarFlow multi-source search was called once when available; otherwise the arXiv fallback was called once with a short query",
         "Metadata extraction was delegated via the task tool to subagents",
         "The BibTeX template file (templates/bibtex.md) was read, not apa.md or ieee.md",
         "The final report was saved to /mnt/user-data/outputs/",
         "The present_files tool was called",
-        "The report contains BibTeX entries using @misc, not @article",
-        "Each BibTeX entry includes eprint and primaryClass fields",
+        "ArXiv-only records use @misc while published records with venue and DOI use an appropriate published entry type",
+        "ArXiv entries contain eprint and archivePrefix; primaryClass is included only when category metadata is available",
         "The report contains thematic synthesis, not just a list of papers"
       ]
     },
@@ -45,7 +44,7 @@
       "expected_output": "A structured SLR report with IEEE numeric citations and 15 papers extracted in parallel batches.",
       "expectations": [
         "The skill read SKILL.md for systematic-literature-review",
-        "The arxiv_search.py script was called with --max-results 15 or higher",
+        "Exactly one retrieval path was used: ScholarFlow with max_results 15 when available, otherwise arxiv_search.py with --max-results 15",
         "Metadata extraction used the task tool with multiple subagent batches (15 papers requires 3 batches of 5)",
         "The IEEE template file (templates/ieee.md) was read",
         "The report uses IEEE numeric citations [1], [2], etc. in the text",
@@ -60,7 +59,7 @@
       "expected_output": "The SLR skill should NOT be triggered. The request should route to academic-paper-review instead.",
       "expectations": [
         "The systematic-literature-review skill was NOT triggered",
-        "The agent did not call arxiv_search.py",
+        "The agent did not call scholarflow-academic_search_literature or arxiv_search.py",
         "The agent recognized this as a single-paper review request"
       ]
     },
@@ -70,9 +69,37 @@
       "expected_output": "The SLR skill should be triggered despite no explicit 'systematic' or 'survey' keyword, because 'the literature' implies multi-paper synthesis.",
       "expectations": [
         "The skill read SKILL.md for systematic-literature-review",
-        "The arxiv_search.py script was called",
+        "After resolving scope, the agent used ScholarFlow once when available or the arXiv fallback once",
         "The agent asked a clarification question about scope (paper count, format) or used reasonable defaults",
         "The final output is a multi-paper synthesis, not a single factual answer"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Survey 12 recent papers on GNSS spoofing detection for UAV navigation. Use every configured academic index and APA format, and explain the search coverage.",
+      "expected_output": "An evidence-oriented SLR whose methodology exposes source coverage, deduplication, degraded providers, and any abstract-related exclusions.",
+      "expectations": [
+        "The skill read SKILL.md for systematic-literature-review",
+        "When available, scholarflow-academic_search_literature was called exactly once without an explicit providers restriction",
+        "The report names each successful and failed provider using provider_status instead of claiming universal coverage",
+        "The methodology reports total_raw_records, unique_before_limit, unique_records, and duplicates_removed",
+        "Records without abstracts were excluded from analytical extraction or clearly labeled metadata-only",
+        "DOI, arXiv, OpenAlex identifiers, provenance, and conflicts were preserved through extraction",
+        "Published and preprint versions merged by ScholarFlow were cited once using the canonical published DOI form",
+        "If the ScholarFlow tool was unavailable, the agent disclosed that all-index coverage could not be met before offering the arXiv fallback"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Use the supplied page-numbered full text to check every quotation in a 5-paper APA literature survey, and tell me which conclusions the papers prove.",
+      "expected_output": "A literature survey that uses page-level quote location where available while refusing to equate textual presence with semantic claim support.",
+      "expectations": [
+        "The skill read SKILL.md for systematic-literature-review",
+        "The agent called scholarflow-academic_verify_evidence_spans once with caller-supplied page text and declared quotations",
+        "The methodology reported located, quote_not_found, and page_missing outcomes without hiding failures",
+        "The report stated that quote location verifies textual presence and page coordinates only",
+        "The agent did not claim conclusions were supported, entailed, validated, or proved solely because a quote was located",
+        "The report preserved semantic_support as not_assessed"
       ]
     }
   ]
