@@ -24,6 +24,15 @@ This package is an independently runnable MCP server. Keep it decoupled from
   paths or fetch URLs supplied in tool arguments.
 - A located quote proves textual presence and page coordinates only. Keep
   `semantic_support` as `not_assessed`; never describe this result as claim validation.
+- MCP PDF extraction accepts caller-supplied Base64 bytes only. Never add URL fetching
+  or caller-selected local paths to the MCP tool. The local CLI may read its explicit
+  input path.
+- PDF extraction is bounded and text-only. Preserve source hashes, page numbers, empty
+  page diagnostics, and the explicit no-OCR/no-layout-reconstruction scope.
+- Semantic assessment must run deterministic quote location first. Model verdicts may
+  cite only located span IDs and must remain described as model judgements, not truth.
+- SciFact source text is user-downloaded and not bundled. Call its metric oracle-evidence
+  classification macro-F1; it does not measure retrieval or PDF extraction.
 
 ## Commands
 
@@ -37,6 +46,10 @@ uv run --project backend/packages/scholarflow-mcp scholarflow-dedup-benchmark
 uv run --project backend/packages/scholarflow-mcp scholarflow-search "query" --max-results 5
 uv run --project backend/packages/scholarflow-mcp scholarflow-known-item-benchmark --max-results 10
 uv run --project backend/packages/scholarflow-mcp scholarflow-verify-evidence backend/packages/scholarflow-mcp/examples/evidence_input.json
+uv run --project backend/packages/scholarflow-mcp scholarflow-extract-pdf paper.pdf --document-id paper-1
+uv run --project backend/packages/scholarflow-mcp scholarflow-assess-claims backend/packages/scholarflow-mcp/examples/claim_assessment_input.json
+uv run --project backend/packages/scholarflow-mcp scholarflow-import-scifact --corpus data/corpus.jsonl --claims data/claims_dev.jsonl --output scifact.json
+uv run --project backend/packages/scholarflow-mcp scholarflow-claim-benchmark scifact.json --output result.json
 ```
 
 Live provider smoke tests are manual and never part of the default test suite.

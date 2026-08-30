@@ -62,7 +62,7 @@ deer-flow/
 │   ├── extensions/sources/         # Deployable snapshots of locally installed Python extensions
 │   ├── packages/extension-api/     # deerflow-extension-api package (import: deerflow_extension_api.*) — public extension contract
 │   ├── packages/harness/           # deerflow-harness package (import: deerflow.*) — agent framework
-│   ├── packages/scholarflow-mcp/   # standalone academic search, dedup, and page-quote evidence MCP
+│   ├── packages/scholarflow-mcp/   # standalone academic search, bounded PDF, and claim-evidence MCP
 │   └── app/                        # FastAPI Gateway + IM channels (import: app.*)
 ├── frontend/                       # Next.js frontend (pnpm) — see frontend/AGENTS.md
 ├── docker/                         # docker-compose files, nginx config, provisioner

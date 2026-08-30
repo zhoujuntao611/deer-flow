@@ -95,11 +95,26 @@
       "expected_output": "A literature survey that uses page-level quote location where available while refusing to equate textual presence with semantic claim support.",
       "expectations": [
         "The skill read SKILL.md for systematic-literature-review",
-        "The agent called scholarflow-academic_verify_evidence_spans once with caller-supplied page text and declared quotations",
+        "The agent called scholarflow-academic_assess_claim_evidence once when a judge was configured, or scholarflow-academic_verify_evidence_spans once when it was not",
         "The methodology reported located, quote_not_found, and page_missing outcomes without hiding failures",
         "The report stated that quote location verifies textual presence and page coordinates only",
-        "The agent did not claim conclusions were supported, entailed, validated, or proved solely because a quote was located",
-        "The report preserved semantic_support as not_assessed"
+        "The agent did not claim conclusions were proved solely because a quote was located or a model returned supported",
+        "When semantic assessment ran, the report preserved model, confidence, labels, and cited span IDs; otherwise it preserved semantic_support as not_assessed"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "I uploaded PDFs for a 6-paper review. Extract their page text, check the exact quotations, and classify each major claim as supported, contradicted, or insufficient. Explain what the score means.",
+      "expected_output": "A page-traceable review that uses bounded PDF extraction and structured model judging while disclosing extraction and evaluation boundaries.",
+      "expectations": [
+        "The skill read SKILL.md for systematic-literature-review",
+        "The agent used scholarflow-academic_extract_pdf_pages only with caller-supplied PDF bytes and did not ask it to fetch URLs or arbitrary paths",
+        "The report disclosed truncated or empty pages and stated that OCR and layout reconstruction were not performed",
+        "The agent called scholarflow-academic_assess_claim_evidence once rather than redundantly calling the quote locator first",
+        "Only page-located quotes were submitted for semantic classification",
+        "Supported and contradicted verdicts cited supplied span IDs and preserved judge model, request, and confidence metadata",
+        "The report described verdicts as model judgements over supplied evidence rather than scientific truth",
+        "Any reported macro-F1 was tied to a named gold dataset and described as oracle-evidence classification rather than retrieval quality"
       ]
     }
   ]

@@ -5,6 +5,17 @@ versioning independently from the DeerFlow application.
 
 ## Unreleased
 
+## 0.2.0 - 2026-08-30
+
+### Added
+
+- Bounded embedded-text extraction from caller-supplied PDF bytes, with source hashes,
+  page provenance, truncation diagnostics, and explicit no-OCR scope.
+- Optional Responses API claim-evidence judge with strict structured output and
+  span-citation validation.
+- Three-way claim evaluation metrics plus a local SciFact import and manual benchmark
+  workflow that does not redistribute source data.
+
 ## 0.1.0 - 2026-08-30
 
 ### Added

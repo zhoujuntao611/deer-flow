@@ -203,14 +203,23 @@ Now produce the final SLR report. Two things happen here: cross-paper synthesis 
 
 If the paper set is too small or too heterogeneous to support thematic synthesis (e.g. 5 papers on wildly different sub-topics), say so explicitly in the report — do not force themes that are not there.
 
-**Optional page-level quote verification**: use
-`scholarflow-academic_verify_evidence_spans` only when page-numbered full text is already
-available from an authorized retrieval step. Pass the page text plus the claims' exact
-quotes once, and report `located`, `quote_not_found`, or `page_missing` outcomes in the
-methodology. A located result verifies textual presence and coordinates only:
-`semantic_support` remains `not_assessed`, so never describe the claim as supported,
-entailed, or validated on that basis. If the workflow has abstracts but no page-numbered
-full text, skip this tool and disclose that page-level evidence was not checked.
+**Optional evidence pipeline**: use it only when full text was obtained through an
+authorized step; ordinary abstract-only reviews skip it and disclose that page-level
+evidence was not checked.
+
+- If the user supplied a PDF and `scholarflow-academic_extract_pdf_pages` is available,
+  pass caller-supplied Base64 bytes once. Do not ask the tool to fetch a URL or read a
+  model-selected path. Disclose empty/truncated pages and the absence of OCR.
+- For quote traceability without semantic judgement, call
+  `scholarflow-academic_verify_evidence_spans` once and report `located`,
+  `quote_not_found`, and `page_missing`. A location result never establishes support.
+- When the user explicitly asks whether claims are supported and
+  `scholarflow-academic_assess_claim_evidence` is configured, call it once instead of
+  separately calling the quote locator; it performs location first. Preserve its model,
+  request, confidence, label, and cited span IDs. Describe `supported`, `contradicted`,
+  and `insufficient` as model judgements over supplied evidence, not proved scientific
+  conclusions. If the judge is unavailable, fall back to location-only output with
+  `semantic_support: not_assessed` and disclose the limitation.
 
 **Citation formatting**: the exact format depends on user preference. Read **only** the template file that matches the user's requested format, not all three:
 

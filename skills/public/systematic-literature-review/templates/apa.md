@@ -69,7 +69,7 @@ Follow this structure verbatim when writing the SLR report body. Fill in content
 
 This review surveyed <N> papers retrieved on <YYYY-MM-DD> using the query `<query>` from <successful providers>. Retrieval returned <raw_count> source records, merged to <unique_before_limit> unique works before the requested limit; <duplicates_removed> duplicate records were consolidated. <Describe failed providers or arXiv-only fallback, if applicable.> Metadata extraction (research question, methodology, key findings, limitations) was performed from available abstracts by language-model agents, with cross-paper synthesis performed by the lead agent.
 
-**Limitations of this review**: <state provider coverage, provider failures, metadata-only exclusions, abstract availability, and that arXiv preprints may not be peer-reviewed. If page-level quote verification was used, report located/unlocated counts and state that it did not assess semantic support; otherwise state that page-level evidence was not checked. Do not claim database exhaustiveness.>
+**Limitations of this review**: <state provider coverage, provider failures, metadata-only exclusions, abstract availability, and that arXiv preprints may not be peer-reviewed. If page-level tools were used, report PDF empty/truncated pages and located/unlocated counts. If semantic assessment was used, name the judge model and state that labels are model judgements over supplied quotes, not scientific truth; otherwise state that semantic support was not assessed. Do not claim database exhaustiveness.>
 
 ## Themes
 

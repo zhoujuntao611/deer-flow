@@ -1,9 +1,8 @@
 # ScholarFlow Academic Search MCP
 
-`scholarflow-mcp` is a deterministic, evidence-oriented scholarly metadata service for
-DeerFlow. It queries arXiv, Crossref, and OpenAlex concurrently, normalizes their
-incompatible schemas, merges duplicate preprint/published records, and preserves the
-source and conflict history behind every merged field.
+`scholarflow-mcp` is an evidence-oriented scholarly research service for DeerFlow. It
+combines deterministic multi-source metadata resolution and page-level quote location
+with an optional, explicitly model-based claim-evidence judge.
 
 ## Architecture
 
@@ -21,8 +20,12 @@ flowchart LR
     R --> L[JSON CLI]
     M --> S[DeerFlow literature-review Skill]
     P[Caller-supplied page text] --> E[Deterministic quote locator]
+    B[Caller-supplied PDF bytes] --> X[Bounded text extraction]
+    X --> E
     E --> M
     E --> V[Evidence JSON CLI]
+    E --> J[Structured semantic judge]
+    J --> F[Three-way evaluation]
 ```
 
 Provider adapters own remote schema parsing only. `dedup.py` owns identity decisions,
@@ -47,6 +50,11 @@ The deduplication contract is inspectable and benchmarked offline:
 - `verify_evidence_spans`: locate quoted text on caller-supplied document pages and
   return exact character offsets. It deliberately reports semantic support as
   `not_assessed`.
+- `extract_pdf_pages`: extract embedded text from bounded caller-supplied Base64 PDF
+  bytes. It does not fetch URLs, perform OCR, or reconstruct layout.
+- `assess_claim_evidence`: locate declared quotes first, then ask a configured model
+  judge for `supported`, `contradicted`, or `insufficient`; every non-insufficient
+  verdict must cite a supplied span ID.
 
 Provider-local ranks are combined with reciprocal-rank fusion after deduplication, so
 `max_results` is a global output limit rather than a per-provider truncation. Each
@@ -85,6 +93,31 @@ command exits with code `1` when any supplied span cannot be located. It never f
 paths or URLs, so PDF acquisition and page-text extraction remain the caller's
 responsibility.
 
+Extract embedded text from a local PDF through the CLI:
+
+```bash
+uv run --project backend/packages/scholarflow-mcp \
+  scholarflow-extract-pdf paper.pdf --document-id paper-1 --output pages.json
+```
+
+The parser accepts at most 20 MB and 200 pages, extracts 50 pages by default, hashes the
+source bytes, and reports empty pages. Empty pages may be scanned images; OCR is not
+performed. The MCP variant accepts Base64 bytes instead of a path so model-provided
+arguments cannot make the server read arbitrary local files.
+
+To run the optional semantic judge over page-located quotes:
+
+```bash
+uv run --project backend/packages/scholarflow-mcp \
+  scholarflow-assess-claims \
+  backend/packages/scholarflow-mcp/examples/claim_assessment_input.json
+```
+
+This requires judge credentials and a model name. Unlocated quotes become
+`insufficient` without a model call. Located quotes are sent as untrusted data using a
+strict JSON Schema; returned claim IDs, labels, confidence values, and cited span IDs
+are validated before they are accepted.
+
 To start the stdio MCP server from `backend/`:
 
 ```bash
@@ -97,6 +130,10 @@ Recommended environment variables:
 SCHOLARFLOW_CONTACT_EMAIL=researcher@example.com
 SCHOLARFLOW_OPENALEX_API_KEY=optional-openalex-key
 SCHOLARFLOW_HTTP_TIMEOUT_SECONDS=20
+SCHOLARFLOW_JUDGE_API_KEY=required-only-for-semantic-assessment
+SCHOLARFLOW_JUDGE_MODEL=operator-selected-model
+SCHOLARFLOW_JUDGE_ENDPOINT=https://api.openai.com/v1/responses
+SCHOLARFLOW_JUDGE_TIMEOUT_SECONDS=60
 ```
 
 `SCHOLARFLOW_CONTACT_EMAIL` opts Crossref requests into its polite pool. OpenAlex can
@@ -107,8 +144,9 @@ To register the stdio server in DeerFlow, copy the disabled `scholarflow-academi
 entry from the repository's `extensions_config.example.json` into
 `extensions_config.json` and set `enabled` to `true`. The example assumes the Gateway
 starts from `backend/`; adjust `PYTHONPATH` when using another working directory. The
-two credential-related environment variables are optional and resolve to empty values
-when unset.
+retrieval credential variables are optional and resolve to empty values when unset.
+Judge configuration is read only when semantic assessment is requested, so metadata,
+PDF extraction, and deterministic quote location stay usable without a model key.
 
 ## Verification
 
@@ -153,10 +191,31 @@ the output so saved baselines remain attributable to an exact case set. See the
 [committed manual baseline](benchmarks/BASELINE.md) for the current measurement and its
 limitations.
 
+### Human-annotated semantic benchmark
+
+ScholarFlow does not bundle or silently download third-party scientific text. Download
+SciFact from its [maintainer repository](https://github.com/allenai/scifact), then
+convert a labeled split locally:
+
+```bash
+uv run --project backend/packages/scholarflow-mcp scholarflow-import-scifact \
+  --corpus data/corpus.jsonl --claims data/claims_dev.jsonl \
+  --output scifact-dev-cases.json
+
+uv run --project backend/packages/scholarflow-mcp scholarflow-claim-benchmark \
+  scifact-dev-cases.json --output scifact-dev-result.json
+```
+
+The adapter preserves SciFact's human labels and gold rationale sentence IDs. Its
+metric is oracle-evidence three-way classification macro-F1: retrieval, PDF extraction,
+and open-domain scientific correctness are outside that score. The run is manual and
+networked because it invokes the configured model judge. See
+[the benchmark protocol](benchmarks/SCIFACT.md).
+
 ## Current boundary
 
-This release candidate validates metadata retrieval, entity resolution, and whether a
-declared quote exists on a supplied page. It does not parse PDFs, infer page numbers,
-perform fuzzy quotation recovery, or judge whether the located text semantically
-supports a generated claim. Those semantic and document-ingestion capabilities remain
-separate future work.
+This release candidate extracts embedded PDF text and can produce model-based semantic
+labels over supplied, page-located quotes. It does not perform OCR, recover document
+layout, discover evidence automatically, or establish scientific truth. Semantic
+labels are judge outputs with explicit model/request provenance and must be evaluated
+on a named dataset before comparative quality claims are made.

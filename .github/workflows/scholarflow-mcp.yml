@@ -68,7 +68,13 @@ jobs:
           --min-f1 1.0
 
       - name: CLI contract smoke test
-        run: uv run scholarflow-search --help
+        run: |
+          uv run scholarflow-search --help
+          uv run scholarflow-extract-pdf --help
+          uv run scholarflow-assess-claims --help
+          uv run scholarflow-import-scifact --help
+          uv run scholarflow-claim-eval --help
+          uv run scholarflow-claim-benchmark --help
 
       - name: Evidence locator smoke test
         run: uv run scholarflow-verify-evidence examples/evidence_input.json

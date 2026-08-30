@@ -31,11 +31,14 @@ rebranded general-purpose agent. Its first independently testable component is
 - a UTF-8 JSON CLI, dedicated CI, and a live known-item HitRate/MRR benchmark with an
   explicit non-recall metric boundary;
 - deterministic page-level quote location over caller-supplied text, exposed through
-  MCP and CLI with original character offsets.
+  MCP and CLI with original character offsets;
+- bounded embedded-text extraction from caller-supplied PDFs, plus an optional strict
+  three-way model judge and a local SciFact human-label evaluation adapter.
 
 The component has a deliberately narrow claim: it improves scholarly metadata retrieval,
-entity resolution, and quote traceability. It does not parse PDFs or infer that located
-text semantically supports a generated claim; those remain later vertical slices.
+entity resolution, and evidence traceability. Semantic labels are model judgements over
+supplied, located quotes—not independent verification of scientific truth—and PDF
+extraction deliberately excludes OCR and layout reconstruction.
 
 ## Official Website
 
