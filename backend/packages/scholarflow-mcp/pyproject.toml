@@ -1,12 +1,13 @@
 [project]
 name = "scholarflow-mcp"
-version = "0.1.0"
-description = "Evidence-oriented multi-source scholarly search MCP server for DeerFlow"
+version = "0.2.0"
+description = "Evidence-oriented scholarly search and claim-verification MCP server for DeerFlow"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28,<1",
     "mcp>=1.28,<2",
+    "pypdf>=6.16,<7",
 ]
 
 [project.scripts]
@@ -15,6 +16,11 @@ scholarflow-search = "scholarflow_mcp.cli:main"
 scholarflow-dedup-benchmark = "scholarflow_mcp.benchmark:main"
 scholarflow-known-item-benchmark = "scholarflow_mcp.known_item_benchmark:main"
 scholarflow-verify-evidence = "scholarflow_mcp.evidence_cli:main"
+scholarflow-extract-pdf = "scholarflow_mcp.pdf_cli:main"
+scholarflow-import-scifact = "scholarflow_mcp.scifact_cli:main"
+scholarflow-claim-eval = "scholarflow_mcp.claim_eval_cli:main"
+scholarflow-claim-benchmark = "scholarflow_mcp.claim_benchmark:main"
+scholarflow-assess-claims = "scholarflow_mcp.claim_cli:main"
 
 [project.optional-dependencies]
 dev = [

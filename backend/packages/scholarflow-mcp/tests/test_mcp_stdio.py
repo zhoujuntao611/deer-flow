@@ -20,7 +20,15 @@ async def test_stdio_server_exposes_stable_tool_contract() -> None:
             response = await session.list_tools()
 
     tools = {tool.name: tool for tool in response.tools}
-    assert set(tools) == {"normalize_papers", "search_literature", "verify_evidence_spans"}
+    assert set(tools) == {
+        "assess_claim_evidence",
+        "extract_pdf_pages",
+        "normalize_papers",
+        "search_literature",
+        "verify_evidence_spans",
+    }
     assert {"query", "max_results"} <= set(tools["search_literature"].inputSchema["properties"])
     assert "records" in tools["normalize_papers"].inputSchema["properties"]
     assert {"pages", "claims"} == set(tools["verify_evidence_spans"].inputSchema["properties"])
+    assert {"pdf_base64", "document_id", "max_pages"} == set(tools["extract_pdf_pages"].inputSchema["properties"])
+    assert {"pages", "claims"} == set(tools["assess_claim_evidence"].inputSchema["properties"])

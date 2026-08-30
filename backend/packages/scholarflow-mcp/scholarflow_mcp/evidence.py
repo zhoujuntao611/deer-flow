@@ -118,9 +118,14 @@ def verify_evidence_spans(
             raise ValueError(f"each claim may contain at most {MAX_SPANS_PER_CLAIM} evidence spans")
 
         verified_spans: list[dict[str, Any]] = []
-        for span in spans:
+        seen_span_ids: set[str] = set()
+        for span_index, span in enumerate(spans, start=1):
             if not isinstance(span, dict):
                 raise ValueError("each evidence span must be an object")
+            span_id = _required_text(span.get("span_id", f"{claim_id}:span-{span_index}"), "span_id")
+            if span_id in seen_span_ids:
+                raise ValueError(f"duplicate span_id within claim {claim_id}: {span_id}")
+            seen_span_ids.add(span_id)
             document_id = _required_text(span.get("document_id"), "document_id")
             page_number = _positive_page_number(span.get("page_number"))
             quote = _required_text(span.get("quote"), "evidence quote")
@@ -136,6 +141,7 @@ def verify_evidence_spans(
             located_spans += location["status"] == "located"
             verified_spans.append(
                 {
+                    "span_id": span_id,
                     "document_id": document_id,
                     "page_number": page_number,
                     "quote": quote,

@@ -1,0 +1,23 @@
+{
+  "pages": [
+    {
+      "document_id": "paper-1",
+      "page_number": 4,
+      "text": "Under simulated spoofing conditions, the proposed detector achieved 94% accuracy."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "claim-1",
+      "text": "The detector achieved 94% accuracy in the reported simulation.",
+      "evidence_spans": [
+        {
+          "span_id": "paper-1:p4:accuracy",
+          "document_id": "paper-1",
+          "page_number": 4,
+          "quote": "Under simulated spoofing conditions, the proposed detector achieved 94% accuracy."
+        }
+      ]
+    }
+  ]
+}

@@ -41,7 +41,7 @@ async def run_search(
 ) -> dict[str, Any]:
     selected = normalize_provider_names(providers)
     timeout = timeout_seconds()
-    headers = {"User-Agent": "ScholarFlow/0.1 (multi-source scholarly metadata search)"}
+    headers = {"User-Agent": "ScholarFlow/0.2 (multi-source scholarly metadata search)"}
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=headers) as client:
         available = {
             "arxiv": ArxivProvider(
