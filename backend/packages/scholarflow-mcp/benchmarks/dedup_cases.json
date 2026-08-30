@@ -1,0 +1,73 @@
+{
+  "description": "Synthetic scholarly metadata records for deterministic offline deduplication evaluation.",
+  "records": [
+    {
+      "case_id": "agent-preprint",
+      "provider": "arxiv",
+      "provider_id": "2501.01234",
+      "title": "Evidence First Retrieval for Long Horizon Research Agents",
+      "authors": ["Ada Lovelace", "Grace Hopper"],
+      "year": 2025,
+      "arxiv_id": "2501.01234v2"
+    },
+    {
+      "case_id": "agent-preprint",
+      "provider": "crossref",
+      "provider_id": "10.5555/agent.2026.7",
+      "title": "Evidence-First Retrieval for Long-Horizon Research Agents",
+      "authors": ["Ada Lovelace", "Grace M. Hopper"],
+      "year": 2026,
+      "doi": "10.5555/agent.2026.7"
+    },
+    {
+      "case_id": "gnss-paper",
+      "provider": "crossref",
+      "provider_id": "10.1000/gnss.42",
+      "title": "Robust UAV Navigation Under GNSS Spoofing",
+      "authors": ["Juntao Zhou", "Ada Lovelace"],
+      "year": 2024,
+      "doi": "https://doi.org/10.1000/GNSS.42"
+    },
+    {
+      "case_id": "gnss-paper",
+      "provider": "openalex",
+      "provider_id": "W4242",
+      "title": "Robust UAV Navigation under GNSS Spoofing",
+      "authors": ["Juntao Zhou", "Ada Lovelace"],
+      "year": 2024,
+      "doi": "doi:10.1000/gnss.42"
+    },
+    {
+      "case_id": "editorial-ada",
+      "provider": "crossref",
+      "provider_id": "editorial-a",
+      "title": "Editorial Introduction",
+      "authors": ["Ada Lovelace"],
+      "year": 2025
+    },
+    {
+      "case_id": "editorial-alan",
+      "provider": "openalex",
+      "provider_id": "editorial-b",
+      "title": "Editorial Introduction",
+      "authors": ["Alan Turing"],
+      "year": 2025
+    },
+    {
+      "case_id": "memory-a",
+      "provider": "openalex",
+      "provider_id": "memory-a",
+      "title": "Layered Memory for Reliable Long Running Agents",
+      "authors": ["Grace Hopper"],
+      "year": 2025
+    },
+    {
+      "case_id": "memory-b",
+      "provider": "crossref",
+      "provider_id": "memory-b",
+      "title": "Layered Memory for Reliable Long Running Agents",
+      "authors": ["Grace Hopper"],
+      "year": 2022
+    }
+  ]
+}

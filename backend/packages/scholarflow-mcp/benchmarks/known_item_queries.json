@@ -1,0 +1,64 @@
+{
+  "description": "Live known-item queries spanning preprints and published works. Targets are identifiers, not relevance judgments.",
+  "cases": [
+    {
+      "id": "attention-is-all-you-need",
+      "query": "Attention Is All You Need transformer",
+      "targets": [
+        {"arxiv_id": "1706.03762"},
+        {"doi": "10.5555/3295222.3295349"},
+        {"openalex_id": "W2626778328"}
+      ]
+    },
+    {
+      "id": "bert",
+      "query": "BERT pre-training bidirectional transformers language understanding",
+      "targets": [
+        {"arxiv_id": "1810.04805"},
+        {"doi": "10.18653/v1/N19-1423"}
+      ]
+    },
+    {
+      "id": "retrieval-augmented-generation",
+      "query": "retrieval augmented generation knowledge intensive NLP",
+      "targets": [
+        {"arxiv_id": "2005.11401"}
+      ]
+    },
+    {
+      "id": "lora",
+      "query": "LoRA low rank adaptation large language models",
+      "targets": [
+        {"arxiv_id": "2106.09685"}
+      ]
+    },
+    {
+      "id": "react",
+      "query": "ReAct synergizing reasoning acting language models",
+      "targets": [
+        {"arxiv_id": "2210.03629"}
+      ]
+    },
+    {
+      "id": "alphafold",
+      "query": "highly accurate protein structure prediction AlphaFold",
+      "targets": [
+        {"doi": "10.1038/s41586-021-03819-2"}
+      ]
+    },
+    {
+      "id": "diabetic-retinopathy",
+      "query": "deep learning detection diabetic retinopathy retinal photographs",
+      "targets": [
+        {"doi": "10.1001/jama.2016.17216"}
+      ]
+    },
+    {
+      "id": "gravitational-waves",
+      "query": "observation gravitational waves binary black hole merger",
+      "targets": [
+        {"doi": "10.1103/PhysRevLett.116.061102"}
+      ]
+    }
+  ]
+}
