@@ -33,6 +33,15 @@ This package is an independently runnable MCP server. Keep it decoupled from
   cite only located span IDs and must remain described as model judgements, not truth.
 - SciFact source text is user-downloaded and not bundled. Call its metric oracle-evidence
   classification macro-F1; it does not measure retrieval or PDF extraction.
+- Retrieval accepts only caller-supplied page text, uses bounded windows, and preserves
+  original page text and exact character offsets. Never fetch model-supplied URLs or
+  read model-supplied paths inside MCP tools.
+- Retrieved windows are candidates, not support claims. Re-locate them before semantic
+  assessment; model verdicts may cite only verified span IDs. A zero-overlap query
+  must abstain without a judge call.
+- The SciFact retrieval benchmark is a separate cited-document abstract measurement.
+  Its baseline and fused modes must use identical cases and chunks; never call its
+  HitRate@K open-corpus recall or conflate it with oracle-evidence classification F1.
 
 ## Commands
 
@@ -50,6 +59,8 @@ uv run --project backend/packages/scholarflow-mcp scholarflow-extract-pdf paper.
 uv run --project backend/packages/scholarflow-mcp scholarflow-assess-claims backend/packages/scholarflow-mcp/examples/claim_assessment_input.json
 uv run --project backend/packages/scholarflow-mcp scholarflow-import-scifact --corpus data/corpus.jsonl --claims data/claims_dev.jsonl --output scifact.json
 uv run --project backend/packages/scholarflow-mcp scholarflow-claim-benchmark scifact.json --output result.json
+uv run --project backend/packages/scholarflow-mcp scholarflow-retrieve-evidence backend/packages/scholarflow-mcp/examples/retrieval_input.json
+uv run --project backend/packages/scholarflow-mcp scholarflow-retrieval-benchmark --corpus data/corpus.jsonl --claims data/claims_dev.jsonl --output retrieval.json
 ```
 
 Live provider smoke tests are manual and never part of the default test suite.

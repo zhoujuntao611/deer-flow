@@ -32,13 +32,15 @@ rebranded general-purpose agent. Its first independently testable component is
   explicit non-recall metric boundary;
 - deterministic page-level quote location over caller-supplied text, exposed through
   MCP and CLI with original character offsets;
+- bounded evidence-window retrieval with word and character BM25 rank fusion,
+  exact page offsets, and a paired SciFact cited-document retrieval benchmark;
 - bounded embedded-text extraction from caller-supplied PDFs, plus an optional strict
   three-way model judge and a local SciFact human-label evaluation adapter.
 
-The component has a deliberately narrow claim: it improves scholarly metadata retrieval,
+The component improves scholarly metadata retrieval, cited-document evidence discovery,
 entity resolution, and evidence traceability. Semantic labels are model judgements over
-supplied, located quotes—not independent verification of scientific truth—and PDF
-extraction deliberately excludes OCR and layout reconstruction.
+located quotes—not independent verification of scientific truth—and PDF extraction
+deliberately excludes OCR and layout reconstruction.
 
 ## Official Website
 

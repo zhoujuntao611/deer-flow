@@ -22,8 +22,10 @@ async def test_stdio_server_exposes_stable_tool_contract() -> None:
     tools = {tool.name: tool for tool in response.tools}
     assert set(tools) == {
         "assess_claim_evidence",
+        "assess_retrieved_claim_evidence",
         "extract_pdf_pages",
         "normalize_papers",
+        "retrieve_claim_evidence",
         "search_literature",
         "verify_evidence_spans",
     }
@@ -32,3 +34,5 @@ async def test_stdio_server_exposes_stable_tool_contract() -> None:
     assert {"pages", "claims"} == set(tools["verify_evidence_spans"].inputSchema["properties"])
     assert {"pdf_base64", "document_id", "max_pages"} == set(tools["extract_pdf_pages"].inputSchema["properties"])
     assert {"pages", "claims"} == set(tools["assess_claim_evidence"].inputSchema["properties"])
+    assert {"pages", "claims", "top_k"} <= set(tools["retrieve_claim_evidence"].inputSchema["properties"])
+    assert {"pages", "claims", "top_k"} <= set(tools["assess_retrieved_claim_evidence"].inputSchema["properties"])

@@ -1,8 +1,8 @@
 # ScholarFlow Academic Search MCP
 
 `scholarflow-mcp` is an evidence-oriented scholarly research service for DeerFlow. It
-combines deterministic multi-source metadata resolution and page-level quote location
-with an optional, explicitly model-based claim-evidence judge.
+combines deterministic multi-source metadata resolution, bounded page-text retrieval,
+page-level quote location, and an optional model-based claim-evidence judge.
 
 ## Architecture
 
@@ -19,9 +19,13 @@ flowchart LR
     R --> M[MCP tools]
     R --> L[JSON CLI]
     M --> S[DeerFlow literature-review Skill]
-    P[Caller-supplied page text] --> E[Deterministic quote locator]
+    P[Caller-supplied page text] --> T[Bounded text windows]
     B[Caller-supplied PDF bytes] --> X[Bounded text extraction]
-    X --> E
+    X --> T
+    T --> H[Word BM25 + character BM25]
+    H --> RF[Reciprocal-rank fusion]
+    RF --> E[Deterministic quote locator]
+    T --> E
     E --> M
     E --> V[Evidence JSON CLI]
     E --> J[Structured semantic judge]
@@ -50,11 +54,18 @@ The deduplication contract is inspectable and benchmarked offline:
 - `verify_evidence_spans`: locate quoted text on caller-supplied document pages and
   return exact character offsets. It deliberately reports semantic support as
   `not_assessed`.
+- `retrieve_claim_evidence`: find candidate quotes for claims in caller-supplied
+  pages using word and character BM25 rank fusion. Results preserve document IDs,
+  page numbers, original character offsets, channel ranks, and retrieval scores.
+  The `word_bm25` mode is a reproducible ablation baseline.
 - `extract_pdf_pages`: extract embedded text from bounded caller-supplied Base64 PDF
   bytes. It does not fetch URLs, perform OCR, or reconstruct layout.
 - `assess_claim_evidence`: locate declared quotes first, then ask a configured model
   judge for `supported`, `contradicted`, or `insufficient`; every non-insufficient
   verdict must cite a supplied span ID.
+- `assess_retrieved_claim_evidence`: retrieve candidate quotes, locate them again
+  against the supplied pages, then call the same bounded model judge. Claims with
+  no lexical candidate become `insufficient` without a model call.
 
 Provider-local ranks are combined with reciprocal-rank fusion after deduplication, so
 `max_results` is a global output limit rather than a per-provider truncation. Each
@@ -77,6 +88,21 @@ artifact, `--providers arxiv crossref` to restrict coverage, and year flags when
 scope requires them. It exits with code `2` only when every selected provider fails.
 
 The repository also exposes `make scholarflow-demo QUERY="..."`.
+
+To run offline evidence retrieval on page text without model credentials:
+
+```bash
+uv run --project backend/packages/scholarflow-mcp \
+  scholarflow-retrieve-evidence \
+  backend/packages/scholarflow-mcp/examples/retrieval_input.json
+```
+
+Add `--assess` to run the configured semantic judge after retrieval and exact quote
+location. The input is a JSON object with `pages` (`document_id`, `page_number`,
+`text`) and `claims` (`claim_id`, `text`). The local CLI reads the input artifact;
+the MCP tools accept caller-supplied page data and never follow model-provided paths
+or URLs. Retrieval uses bounded windows and deterministic tie-breaking. It returns
+candidate text, not proof of claim support. A no-overlap query returns no candidates.
 
 To verify page-level quote coordinates from a JSON artifact:
 
@@ -212,10 +238,18 @@ and open-domain scientific correctness are outside that score. The run is manual
 networked because it invokes the configured model judge. See
 [the benchmark protocol](benchmarks/SCIFACT.md).
 
+### Cited-document evidence retrieval benchmark
+
+The offline [retrieval protocol and paired development-set measurement](benchmarks/RETRIEVAL.md)
+compare word BM25 against word plus character BM25 with rank fusion on the same
+user-downloaded SciFact development data. This measures whether annotated evidence
+sentences appear in Top-K windows **within known cited abstracts**; it is not an
+open-corpus retrieval, answer quality, or PDF extraction score.
+
 ## Current boundary
 
-This release candidate extracts embedded PDF text and can produce model-based semantic
-labels over supplied, page-located quotes. It does not perform OCR, recover document
-layout, discover evidence automatically, or establish scientific truth. Semantic
-labels are judge outputs with explicit model/request provenance and must be evaluated
-on a named dataset before comparative quality claims are made.
+This release candidate extracts embedded PDF text, retrieves candidate evidence
+windows from caller-supplied pages, and can produce model-based semantic labels over
+re-located quotes. It does not perform OCR, recover document layout, retrieve full
+text from the web, or establish scientific truth. Its lexical retriever can miss
+paraphrases. Semantic labels are judge outputs with explicit model/request provenance.

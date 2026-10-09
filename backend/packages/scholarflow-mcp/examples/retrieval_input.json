@@ -1,0 +1,20 @@
+{
+  "pages": [
+    {
+      "document_id": "study-a",
+      "page_number": 2,
+      "text": "The detector achieved 94% accuracy on held-out flights. The test included 50 flights."
+    },
+    {
+      "document_id": "study-b",
+      "page_number": 1,
+      "text": "A separate study examined weather effects on aircraft navigation."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "claim-1",
+      "text": "The detector achieved 94% accuracy on held-out flights."
+    }
+  ]
+}

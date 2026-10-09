@@ -5,6 +5,15 @@ versioning independently from the DeerFlow application.
 
 ## Unreleased
 
+### Added
+
+- Bounded page-text evidence retrieval with word and character BM25 rank fusion,
+  exact source offsets, deterministic ranking, and a word-only ablation mode.
+- Retrieval-to-quote-verification-to-model-judgement MCP and CLI flow with
+  citation IDs and no-candidate abstention.
+- Offline paired SciFact cited-document retrieval benchmark with hashed source
+  inputs, case-level ranks, and an explicit metric boundary.
+
 ## 0.2.0 - 2026-08-30
 
 ### Added

@@ -10,6 +10,8 @@ from scholarflow_mcp.dedup import deduplicate_records
 from scholarflow_mcp.evidence import verify_evidence_spans as verify_spans
 from scholarflow_mcp.models import PaperRecord
 from scholarflow_mcp.pdf import extract_pdf_base64
+from scholarflow_mcp.retrieval import assess_retrieved_claim_evidence as assess_retrieved
+from scholarflow_mcp.retrieval import retrieve_claim_evidence as retrieve_evidence
 
 mcp = FastMCP("ScholarFlow Academic Search")
 
@@ -71,6 +73,46 @@ async def assess_claim_evidence(
 ) -> dict[str, Any]:
     """Locate supplied quotes, then classify support using a configured model judge with explicit uncertainty."""
     return await assess_claims(pages=pages, claims=claims)
+
+
+@mcp.tool()
+def retrieve_claim_evidence(
+    pages: list[dict[str, Any]],
+    claims: list[dict[str, Any]],
+    top_k: int = 5,
+    chunk_characters: int = 800,
+    chunk_overlap: int = 120,
+    mode: str = "hybrid",
+) -> dict[str, Any]:
+    """Retrieve candidate quotes from supplied pages with BM25 fusion and exact page offsets; no support judgement."""
+    return retrieve_evidence(
+        pages=pages,
+        claims=claims,
+        top_k=top_k,
+        chunk_characters=chunk_characters,
+        chunk_overlap=chunk_overlap,
+        mode=mode,
+    )
+
+
+@mcp.tool()
+async def assess_retrieved_claim_evidence(
+    pages: list[dict[str, Any]],
+    claims: list[dict[str, Any]],
+    top_k: int = 5,
+    chunk_characters: int = 800,
+    chunk_overlap: int = 120,
+    mode: str = "hybrid",
+) -> dict[str, Any]:
+    """Retrieve candidates, verify their source offsets, then judge claim support with cited span IDs."""
+    return await assess_retrieved(
+        pages=pages,
+        claims=claims,
+        top_k=top_k,
+        chunk_characters=chunk_characters,
+        chunk_overlap=chunk_overlap,
+        mode=mode,
+    )
 
 
 def main() -> None:

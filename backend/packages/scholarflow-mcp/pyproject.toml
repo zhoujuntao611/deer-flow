@@ -21,6 +21,8 @@ scholarflow-import-scifact = "scholarflow_mcp.scifact_cli:main"
 scholarflow-claim-eval = "scholarflow_mcp.claim_eval_cli:main"
 scholarflow-claim-benchmark = "scholarflow_mcp.claim_benchmark:main"
 scholarflow-assess-claims = "scholarflow_mcp.claim_cli:main"
+scholarflow-retrieve-evidence = "scholarflow_mcp.retrieval_cli:main"
+scholarflow-retrieval-benchmark = "scholarflow_mcp.retrieval_benchmark:main"
 
 [project.optional-dependencies]
 dev = [
